@@ -1,3 +1,6 @@
-venv/
-loo.hdf5
+venv*
 *.hdf5
+AlphaImpute2*
+alphaimpute2/
+*.bed
+SI_hair_*
