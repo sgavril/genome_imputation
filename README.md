@@ -3,28 +3,22 @@ Code for genome imputation comparison study
 
 
 ### Notes for myself
-venv/ contains AlphaImpute2 (py 3.11)
-venv3.6 contains alphaplinkpython (py 3.6)
+venv3.6 contains uses python3.6 as being compatible with alphaplinkpython 0.0.8
+    - as well as AlphaImpute2 after modifying jitclass imports
 
 #### Calling AlphaImpute2
+This works:
 ```
 AlphaImpute2 \
-    -bfile SI_hair_128_10000_bpRN.bed \
+    -bfile SI_hair_128_10000_bpRN \
     -binaryoutput \
     -out test.bim
 ```
 
-This does not work:
+Testing subset:
 ```
 AlphaImpute2 \
     -bfile SI_hair_128_10000_bpRN_hail \
     -binaryoutput \
-    -out test.bim
-```
-This works:
-```
-AlphaImpute2 \
-    -genotypes SI_hair_128_10000_bpRN.txt \
-    -binaryoutput \
-    -out test.bim
+    -out test_hail.bim
 ```

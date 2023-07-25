@@ -1,4 +1,4 @@
-import hail as hl
+import hail as hl, numpy as np
 
 hl.init()
 
