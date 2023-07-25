@@ -3,4 +3,6 @@ venv*
 AlphaImpute2*
 alphaimpute2/
 *.bed
-SI_hair_*
+*SI_hair_*
+hail*
+*whl
