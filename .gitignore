@@ -6,3 +6,7 @@ alphaimpute2/
 *SI_hair_*
 hail*
 *whl
+samples.txt
+plink
+*.err
+*.log
