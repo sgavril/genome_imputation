@@ -3,6 +3,8 @@ venv*
 AlphaImpute2*
 alphaimpute2/
 *.bed
+*.hh
+*.dupvar
 *SI_hair_*
 hail*
 *whl
@@ -10,3 +12,4 @@ samples.txt
 plink
 *.err
 *.log
+beagle*.jar
