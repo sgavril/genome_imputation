@@ -13,3 +13,4 @@ plink
 *.err
 *.log
 beagle*.jar
+*.out
