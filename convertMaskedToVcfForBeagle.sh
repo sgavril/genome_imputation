@@ -17,5 +17,16 @@
 #         './plink --bfile {.} --recode vcf --out {.} --horse && \
 #         gzip {.}".vcf" '
 
-find /scratch/20708102/replicates3/ -type f | grep ".vcf.gz$" |
-    parallel  'java -jar beagle.22Jul22.46e.jar gt={} out={basename {} .vcf.gz}'
+# have to do this because the job finished early
+find /scratch/20708102/replicates2/ -type f | grep ".bim$" |
+    while read -r file; do
+        vcf_file="${file%.bim}.vcf.gz"
+        if [[ ! -f "$vcf_file" ]]; then
+            echo "$file"
+        fi
+    done | parallel \
+        './plink --bfile {.} --recode vcf --out {.} --horse && \
+        gzip {.}".vcf" '
+
+# find /scratch/20708102/replicates2/ -type f | grep ".vcf.gz$" |
+#     parallel  'java -jar beagle.22Jul22.46e.jar gt={} out={basename {} .vcf.gz}'
