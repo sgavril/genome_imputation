@@ -14,9 +14,11 @@ source venv3.6/bin/activate
 
 find /scratch/20708102/replicates2/ -type f | grep ".bim$" | \
 	parallel -j 48 \
-		'AlphaImpute2 \
+		'if [ ! -f /scratch/20708102/outputs2/{/.} ]; then \
+			AlphaImpute2 \
 			-maxthreads 2 \
 			-bfile {.} \
 			-pop_only \
 			-binaryoutput \
-			-out /scratch/20708102/outputs2/{/.}'
+			-out /scratch/20708102/outputs2/{/.}; \
+		fi'
