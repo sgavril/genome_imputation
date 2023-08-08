@@ -34,6 +34,7 @@ plink --file $FILTERED_OUTPUT --freq --out Sable_October_2018_filt --horse
 # Mask genotypes
 ###############################################################################
 # This generates files listing SNPs to keep for each method
+deactivate
 conda activate imputation.py36
 maskDownTo=(1000 2500 5000 10000 15000 20000)
 for i in ${maskDownTo[@]}
@@ -44,6 +45,7 @@ do
         Rscript maskSNP.R $FILTERED_OUTPUT".map" $i $CHROM_FILE $j
     done
 done
+conda deactivate
 
 mv snpsToMask_*tsv data/snpsToMaskDownTo
 
@@ -67,11 +69,12 @@ do
         # Iterate over every SNP selection method
         for k in bpRN bpEQ bpMAF lduMAF
             do	
-            
-            plink --file $FILTERED_OUTPUT \
+            echo $i ; echo $j ; echo $k
+            ./plink --file $FILTERED_OUTPUT \
                     --horse --make-bed \
                     --zero-cluster "snpsToMask_"$j"_"$k".tsv" \
                     --within tmp.txt \
+                    --out "$loo_directory"$i"_"$j"_"$k
 	    done
     done
 done
