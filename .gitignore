@@ -16,3 +16,7 @@ plink
 *.log
 beagle*.jar
 *.out
+data/
+loo/
+*.tsv
+*.frq
