@@ -10,10 +10,10 @@
 
 source venv3.6/bin/activate
 
-#mkdir -p /scratch/20708102/outputs2
+mkdir -p /scratch/20708102/outputs
 
-find /scratch/20708102/replicates2/ -type f | grep ".bim$" | \
-	parallel \
+find /scratch/20708102/replicates/ -type f | grep ".bim$" | \
+	parallel -j 48 \
 		'if [ ! -f /scratch/20708102/outputs2/{/} ]; then \
 			AlphaImpute2 \
 			-maxthreads 2 \

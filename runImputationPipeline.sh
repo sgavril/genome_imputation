@@ -72,7 +72,7 @@ do
             echo $i ; echo $j ; echo $k
             ./plink --file $FILTERED_OUTPUT \
                     --horse --make-bed \
-                    --zero-cluster "snpsToMask_"$j"_"$k".tsv" \
+                    --zero-cluster "data/snpsToMaskDownTo/snpsToMask_"$j"_"$k".tsv" \
                     --within tmp.txt \
                     --out "$loo_directory"$i"_"$j"_"$k
 	    done

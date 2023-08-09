@@ -33,4 +33,7 @@ do
     done
 done
 
-rm /scratch/20708102/replicates/*.log ; rm /scratch/20708102/replicates/*.txt
+#rm /scratch/20708102/replicates/*.log ; rm /scratch/20708102/replicates/*.txt
+find /scratch/20708102/replicates/ -type f -name "*.log" -delete
+find /scratch/20708102/replicates/ -type f -name "*.tmp" -delete
+find /scratch/20708102/replicates/ -type f -name "*.txt" -delete
