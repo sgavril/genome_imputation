@@ -17,8 +17,8 @@ loo_directory="loo/"
 ###############################################################################
 # Quality control
 ###############################################################################
-./plink --file $RAW_INPUT --horse --list-duplicate-vars ids-only --out $FILTERED_OUTPUT
-./plink --bfile $FILTERED_OUTPUT --exclude plink.dupvar --out $FILTERED_OUTPUT
+./plink --file $RAW_INPUT --horse --list-duplicate-vars suppress-first
+./plink --file $RAW_INPUT --exclude plink.dupvar --make-bed --horse --out $FILTERED_OUTPUT
 
 ./plink --file $FILTERED_OUTPUT --horse --geno 0.1 --make-bed --recode --out $FILTERED_OUTPUT
 
@@ -27,7 +27,7 @@ loo_directory="loo/"
 ./plink --file $FILTERED_OUTPUT --horse --maf 0.01 --make-bed --recode --out $FILTERED_OUTPUT
 
 # Report frequencies for bpMAF SNP selection method
-plink --file $FILTERED_OUTPUT --freq --out Sable_October_2018_filt --horse
+./plink --file $FILTERED_OUTPUT --freq --out Sable_October_2018_filt --horse
 
 
 ###############################################################################
