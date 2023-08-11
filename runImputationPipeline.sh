@@ -20,22 +20,23 @@ loo_directory="loo/"
 ./plink --file $RAW_INPUT --horse --list-duplicate-vars suppress-first
 ./plink --file $RAW_INPUT --exclude plink.dupvar --make-bed --horse --out $FILTERED_OUTPUT
 
-./plink --file $FILTERED_OUTPUT --horse --geno 0.1 --make-bed --recode --out $FILTERED_OUTPUT
+./plink --bfile $FILTERED_OUTPUT --horse --geno 0.1 --make-bed --recode --out $FILTERED_OUTPUT
 
-./plink --file $FILTERED_OUTPUT --horse --mind 0.1 --make-bed --recode --out $FILTERED_OUTPUT
+./plink --bfile $FILTERED_OUTPUT --horse --mind 0.1 --make-bed --recode --out $FILTERED_OUTPUT
 
-./plink --file $FILTERED_OUTPUT --horse --maf 0.01 --make-bed --recode --out $FILTERED_OUTPUT
+./plink --bfile $FILTERED_OUTPUT --horse --maf 0.01 --make-bed --recode --out $FILTERED_OUTPUT
 
 # Report frequencies for bpMAF SNP selection method
-./plink --file $FILTERED_OUTPUT --freq --out Sable_October_2018_filt --horse
+./plink --bfile $FILTERED_OUTPUT --freq --out $FILTERED_OUTPUT --horse
 
-
+# Create plink cluster file
+./plink --file $FILTERED_OUTPUT --cluster --horse --out $FILTERED_OUTPUT
 ###############################################################################
 # Mask genotypes
 ###############################################################################
 # This generates files listing SNPs to keep for each method
 deactivate
-conda activate imputation.py36
+source activate imputation.py36
 maskDownTo=(1000 2500 5000 10000 15000 20000)
 for i in ${maskDownTo[@]}
 do
@@ -45,12 +46,9 @@ do
         Rscript maskSNP.R $FILTERED_OUTPUT".map" $i $CHROM_FILE $j
     done
 done
-conda deactivate
+source deactivate
 
 mv snpsToMask_*tsv data/snpsToMaskDownTo
-
-# Create plink cluster file
-plink --file $FILTERED_OUTPUT --cluster --horse --out $FILTERED_OUTPUT
 
 # Perform masking, should have 2664 files
 # From 111 individuals * 4 SNP selection methods * 6 SNP densities

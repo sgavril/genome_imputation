@@ -84,7 +84,7 @@ getEquidistantSNPs <- function(numSNPs) {
 # Method 3: equidistant in bp and optimised for MAF
 #####################################################################
 getSNPsOptimizedForMaf <- function(numSNPs) {
-  freqs <- read.table("Sable_October_2018_filt.frq", header = T)
+  freqs <- read.table("data/filtered/Sable_October_2018_filt.frq", header = T)
   # Initialize an empty dataframe containing SNPs optimized for 
   # distance and MAF
   optimized.maf <- data.frame(matrix(nrow=0, ncol=2))
@@ -154,7 +154,7 @@ getSNPsOptimizedForMaf <- function(numSNPs) {
 # Method 4: equidistant in LD units and optimized for MAF
 ######################################################################
 getSNPsOptimizedForMaf_LD <- function(numSNPs) {
-  freqs <- read.table("Sable_October_2018_filt.frq", header = T)
+  freqs <- read.table("data/filtered/Sable_October_2018_filt.frq", header = T)
   # Initialize an empty dataframe containing SNPs optimized for 
   # distance and MAF
   optimized.maf <- data.frame(matrix(nrow=0, ncol=2))

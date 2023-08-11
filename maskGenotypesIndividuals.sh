@@ -26,7 +26,7 @@ do
             shuf -n $j /scratch/20708102/replicates/tmp.ref.txt >> "/scratch/20708102/replicates/${base}_ind${j}_rep${k}.tmp"
             awk '{print "Sable", $1}' "/scratch/20708102/replicates/${base}_ind${j}_rep${k}.tmp" > "/scratch/20708102/replicates/${base}_ind${j}_rep${k}.txt"
             #rm "/scratch/20708102/replicates/${base}_ind${j}_rep${k}.tmp"
-            ./plink --bfile "../loo/${base}" \
+            ./plink --bfile "loo/${base}" \
                 --keep "/scratch/20708102/replicates/${base}_ind${j}_rep${k}.txt" \
                 --make-bed --horse \
                 --out "/scratch/20708102/replicates/${base}_ind${j}_rep${k}"

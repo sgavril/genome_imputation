@@ -20,3 +20,4 @@ data/
 loo/
 *.tsv
 *.frq
+*.ldmap

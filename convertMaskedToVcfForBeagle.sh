@@ -17,11 +17,11 @@ find /scratch/20708102/replicates/ -type f | grep ".bim$" |
         gzip {.}".vcf" '
 
 # Just testing one
-# ./plink --bfile /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5 \
-#     --recode vcf \
-#     --out /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5 \
-#     --horse && \
-#     gzip /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5.vcf
+./plink --bfile /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1 \
+    --recode vcf \
+    --out /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1 \
+    --horse && \
+    gzip /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
 
 # have to do this because the job finished early
 # find /scratch/20708102/replicates2/ -type f | grep ".bim$" |
