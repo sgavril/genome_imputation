@@ -9,8 +9,9 @@
 #SBATCH --output=%x-%j.log
 #SBATCH --error=%x-%j.err
 
+rm -rf /scratch/20708102/replicates/
 mkdir -p /scratch/20708102/replicates/
-for i in ../loo/*bim
+for i in loo/*bim
 do
     echo "Currently processing file: $i"
     base=`basename $i .bim`

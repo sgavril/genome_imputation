@@ -11,29 +11,17 @@
 source venv3.6/bin/activate
 mkdir -p /scratch/20708102/outputs_beagle
 
-# ./plink \
-#     --bfile /home/stefan.gavriliuc/projects/imputation/02_AlphaImpute2/Sable_October_2018_filt \
-#     --exclude plink.dupvar \
-#     --make-bed \
-#     --out Sable_October_2018_filt_dedup \
-#     --horse
+find /scratch/20708102/replicates/ -type f | grep ".bim$" |
+    parallel \
+        './plink --bfile {.} --recode vcf --out {.} --horse && \
+        gzip {.}".vcf" '
 
-mkdir -p loo_beagle/
-for i in ../loo/*.bed
-do
-    #echo $i
-    name=$(basename -s ".bed" $i)
-    echo $name
-    plink --bfile ../loo/
-done
-
-# ./plink --bfile /scratch/20708102/replicates3/SI_hair_128_10000_bpRN_ind100_rep1 \
-#     --list-duplicate-vars ids-only --horse
-
-# find /scratch/20708102/replicates2/ -type f | grep ".bim$" |
-#     parallel \
-#         './plink --bfile {.} --recode vcf --out {.} --horse && \
-#         gzip {.}".vcf" '
+# Just testing one
+# ./plink --bfile /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5 \
+#     --recode vcf \
+#     --out /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5 \
+#     --horse && \
+#     gzip /scratch/20708102/replicates/SI_hair_81_5000_lduMAF_ind110_rep5.vcf
 
 # have to do this because the job finished early
 # find /scratch/20708102/replicates2/ -type f | grep ".bim$" |
@@ -46,8 +34,13 @@ done
 #         './plink --bfile {.} --recode vcf --out {.} --horse && \
 #         gzip {.}".vcf" '
 
-find /scratch/20708102/replicates3/ -type f | grep ".vcf.gz$" |
-    parallel -j 48 \
+# Just testing one iteration
+java -jar beagle.22Jul22.46e.jar ne=50 \
+    gt=/scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf.gz \
+    out=/scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
+
+find /scratch/20708102/replicates/ -type f | grep ".vcf.gz$" |
+    parallel --dry-run -j 48 \
         'java -jar beagle.22Jul22.46e.jar \
-            gt={} \
+            gt={} ne=50 \
             out=/scratch/20708102/outputs_beagle/{/.}'
