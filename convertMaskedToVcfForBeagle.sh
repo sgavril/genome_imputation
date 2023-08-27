@@ -9,9 +9,10 @@
 #SBATCH --time=72:00:00
 
 source venv3.6/bin/activate
-mkdir -p /scratch/20708102/outputs_beagle
+# mkdir -p /scratch/20708102/outputs_beagle
+# mkdir -p outputs_beagle
 
-# find /scratch/20708102/replicates/ -type f | grep ".bim$" |
+# find replicates/ -type f | grep ".bim$" |
 #     parallel \
 #         './plink --bfile {.} --recode vcf --out {.} --horse && \
 #         gzip {.}".vcf" '
@@ -39,11 +40,11 @@ mkdir -p /scratch/20708102/outputs_beagle
 #     gt=/scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf.gz \
 #     out=/scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
 
-find /scratch/20708102/replicates/ -type f | grep ".vcf$" |
-    parallel -j 48 \
-        'if [ ! -f /scratch/20708102/outputs_beagle/{/}.gz ]; then \
+find replicates/ -type f | grep ".vcf.gz$" |
+    parallel -j 2 \
+        'if [ ! -f outputs_beagle/{/}.gz ]; then \
             java -jar beagle.22Jul22.46e.jar gt={} ne=50 \
-                out=/scratch/20708102/outputs_beagle/{/.} \
+                out=outputs_beagle/{/.} \
         else \
-            echo "File /scratch/20708102/outputs_beagle/{/}.gz already exists, skipping."; \
+            echo "File outputs_beagle/{/}.gz already exists, skipping."; \
         fi'
