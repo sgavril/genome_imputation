@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=4000m
-#SBATCH --cpus-per-task=48
+#SBATCH --cpus-per-task=4
 #SBATCH --time=72:00:00
 
 source venv3.6/bin/activate
@@ -41,10 +41,15 @@ source venv3.6/bin/activate
 #     out=/scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
 
 find replicates/ -type f | grep ".vcf.gz$" |
-    parallel -j 2 \
-        'if [ ! -f outputs_beagle/{/}.gz ]; then \
-            java -jar beagle.22Jul22.46e.jar gt={} ne=50 \
-                out=outputs_beagle/{/.} \
+    parallel -j 4 \
+        'base=$(basename {}); \
+        base_no_ext="${base%.gz}"; \
+        base_no_ext="${base_no_ext%.vcf}"; \
+        echo "Debug: base=$base, base_no_ext=$base_no_ext"; \
+        echo "java -jar beagle.22Jul22.46e.jar gt={} ne=50 out=outputs_beagle/$base_no_ext" ; \
+        if [ ! -f outputs_beagle/$base ]; then \
+            echo "Output file not found ; running beagle"; \
+            java -jar beagle.22Jul22.46e.jar gt={} ne=50 out=outputs_beagle/$base_no_ext; \
         else \
-            echo "File outputs_beagle/{/}.gz already exists, skipping."; \
+            echo "File outputs_beagle/$base already exists, skipping."; \
         fi'
