@@ -1,20 +1,31 @@
+import os, h5py
 from pandas_plink import read_plink
-import h5py, numpy as np
 
-plink_files = []
+def write_to_hdf5(hdf5_filename, data_dict):
+    """Write genotype data to HDF5 file."""
+    with h5py.File(hdf5_filename, 'w') as f:
+        for key, value in data_dict.items():
+            f.create_dataset(key, data=value)
 
-with h5py.File('genotypes.h5', 'a') as f:
-    for path in plink_files:
-        (_, _, G) = read_plink(path)
+if __name__ == '__main__':
+    # Specify the directory containing PLINK Files
+    plink_dir = 'outputs'
 
-        genotype_data_numpy = G.compute()
+    all_genotypes = {}
 
-        if 'genotypes' in f:
-            dataset = f['genotypes']
-            new_shape = (dataset.shape[0] + genotype_data_numpy.shape[0], *genotype_data_numpy.shape[1:])
-            dataset.resize(new_shape)
-            dataset[-genotype_data_numpy.shape[0]:] = genotype_data_numpy
-        else:
-            maxshape = (None, *genotype_data_numpy.shape[1:])
-            f.create_dataset('genotypes', data=genotype_data_numpy, maxshape=maxshape, chunks=True)
+    # Iterate over each file in the directory
+    for filename in os.listdir(plink_dir):
+        if filename.endswith('.bed'):
+            sample_name = os.path.splitext(filename)[0]
+            prefix = os.path.join(plink_dir, sample_name)
 
+            # Read in the file using pandas_plink
+            (bim, fam, bed) = read_plink(prefix)
+
+            # Convert genotype data to a numpy array
+            genotypes = bed.compute().values
+
+            # Store genotypes
+            all_genotypes[sample_name] = genotypes
+
+    write_to_hdf5('all_genotypes.h5', all_genotypes)
