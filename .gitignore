@@ -21,3 +21,4 @@ loo/
 *.tsv
 *.frq
 *.ldmap
+*.h5
