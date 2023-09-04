@@ -25,7 +25,7 @@ print(masked_positions_dict.keys())
 
 
 # Open the existing HDF5 file to update
-with h5py.File('all_genotypes.h5', 'a') as f:  # Note the 'a' mode for appending
+with h5py.File('all_genotypes.h5', 'a') as f:
     # Loop through each sample_name
     for sample_name in f.keys():
         sample_group = f[sample_name]

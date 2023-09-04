@@ -19,21 +19,31 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                 
                 # Loop through each num_ind
                 for num_ind in snp_sel_method_group.keys():
-                    print(f"    Checking num_ind: {num_ind}")
-                    num_ind_method_group = num
-
-                # Loop through each replicate
-                for replicate in snp_sel_method_group.keys():
-                    print(f"      Checking replicate: {replicate}")
-                    replicate_group = snp_sel_method_group[replicate]
+                    print(f"      Checking num_ind: {num_ind}")
+                    num_ind_group = snp_sel_method_group[num_ind]
                     
-                    # Check if 'Masked_Positions' dataset exists under this replicate
-                    if 'Masked_Positions' in replicate_group:
-                        # Read the dataset into a NumPy array
-                        masked_positions = replicate_group['Masked_Positions'][:]
+                    # Loop through each replicate
+                    for replicate in num_ind_group.keys():
+                        print(f"        Checking replicate: {replicate}")
+                        replicate_group = num_ind_group[replicate]
                         
-                        # Print the masked positions
-                        print(f"Masked Positions for {sample_name}/{num_snps}/{snp_sel_method}/{replicate}:")
-                        print(masked_positions)
-                    else:
-                        print(f"      No 'Masked_Positions' in {replicate}")
+                        # Check if 'Masked_Positions' dataset exists under this replicate
+                        if 'Masked_Positions' in replicate_group:
+                            # Read the dataset into a NumPy array
+                            masked_positions = replicate_group['Masked_Positions'][:]
+                            
+                            # Print the masked positions
+                            print(f"        Masked Positions for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}:")
+                            print(masked_positions[:10])  # Preview first 10 masked positions
+                            
+                        else:
+                            print(f"        No 'Masked_Positions' in {replicate}")
+                        
+                        # Assuming the genotype data is stored in a dataset named 'Genotypes' under each replicate
+                        if 'Genotypes' in replicate_group:
+                            # Read the genotype data into a NumPy array
+                            genotypes = replicate_group['Genotypes'][:]
+                            
+                            # Print some of the genotypes
+                            print(f"        Genotypes for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}:")
+                            print(genotypes[:10, :10])  # Preview first 10 rows and 10 columns
