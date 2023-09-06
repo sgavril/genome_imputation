@@ -6,6 +6,19 @@ from pandas_plink import read_plink
 (bim, fam, bed) = read_plink('/home/stefan.gavriliuc/projects/imputation/02_AlphaImpute2/Sable_October_2018_filt')
 reference_genotypes = bed.compute()
 
+def calculate_accuracy(ref_geno, imp_geno):
+    full_matches = np.sum(ref_geno == imp_geno)
+    partial_matches = 0
+    for i in range(len(ref_geno)):
+        if ref_geno[i] == 0 and imp_geno[i] == 1:
+            partial_matches += 0.5
+        if ref_geno[i] == 1 and imp_geno[i] in [0, 2]:
+            partial_matches += 0.5
+        if ref_geno[i] == 2 and imp_geno[i] == 1:
+            partial_matches += 0.5
+    accuracy = (full_matches + partial_matches) / len(ref_geno)
+    return accuracy
+
 # Open the HDF5 file in read mode
 with h5py.File('all_genotypes.h5', 'r') as f:
     # Loop through each sample_name
@@ -34,8 +47,8 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                         imputed_genotypes = replicate_group['SNPs'][:]
                         masked_positions = replicate_group['Masked_Positions'][:]
 
-                        print(f"        Sample Imputed Genotypes: {imputed_genotypes[:5]}")
-                        print(f"        Sample Masked Positions: {masked_positions[:, :5]}")
+                        # print(f"        Sample Imputed Genotypes: {imputed_genotypes}")
+                        # print(f"        Sample Masked Positions: {masked_positions}")
                         
                         # Filter reference and imputed genotypes to only include masked positions
                         masked_reference_genotypes = reference_genotypes[masked_positions[0], masked_positions[1]]
@@ -47,6 +60,10 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                         # Compute genotype correlation
                         correlation = np.corrcoef(masked_reference_genotypes, masked_imputed_genotypes)[0, 1]
                         
+                        # Compute custom accuracy method
+                        custom_accuracy = calculate_accuracy(masked_reference_genotypes, masked_imputed_genotypes)
+
                         print(f"Accuracy Metrics for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}:")
                         print(f"  Percent Match: {percent_match}%")
                         print(f"  Genotype Correlation: {correlation}")
+                        print(f"  Accuracy: {new_accuracy * 100}%")
