@@ -40,19 +40,22 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                     # Loop through each replicate
                     for replicate in num_ind_group.keys():
                         replicate_group = num_ind_group[replicate]
-                        
-                        print(f"        Datasets: {list(replicate_group.keys())}")
+                        print(f"{num_ind_group}")
+                        # Get the sample names for this replicate
+                        sample_names = replicate_group['Sample_Names'][:]
+                        sample_names_str = [name.decode('utf-8') for name in sample_names]
+                        individual_index = sample_names_str.index(sample_name)
 
                         # Load imputed genotypes and masked positions
-                        imputed_genotypes = replicate_group['SNPs'][:]
-                        masked_positions = replicate_group['Masked_Positions'][:]
+                        imputed_genotypes = replicate_group['SNPs'][:, individual_index]
+                        masked_positions = replicate_group['Masked_Positions']
 
-                        # print(f"        Sample Imputed Genotypes: {imputed_genotypes}")
-                        # print(f"        Sample Masked Positions: {masked_positions}")
-                        
                         # Filter reference and imputed genotypes to only include masked positions
-                        masked_reference_genotypes = reference_genotypes[masked_positions[0], masked_positions[1]]
-                        masked_imputed_genotypes = imputed_genotypes[masked_positions[0], masked_positions[1]]
+                        masked_reference_genotypes = reference_genotypes[masked_positions, individual_index]
+                        masked_imputed_genotypes = imputed_genotypes[masked_positions]
+
+                        print(masked_reference_genotypes)
+                        print(masked_imputed_genotypes)
                         
                         # Compute percent match
                         percent_match = np.mean(masked_reference_genotypes == masked_imputed_genotypes) * 100
@@ -66,4 +69,4 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                         print(f"Accuracy Metrics for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}:")
                         print(f"  Percent Match: {percent_match}%")
                         print(f"  Genotype Correlation: {correlation}")
-                        print(f"  Accuracy: {new_accuracy * 100}%")
+                        print(f"  Accuracy: {custom_accuracy * 100}%")
