@@ -2,7 +2,7 @@ import os, h5py, numpy as np
 from pandas_plink import read_plink
 
 
-def write_to_hdf5(hdf5_filename, data_dict):
+def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
     """Write genotype data to HDF5 file."""
     with h5py.File(hdf5_filename, 'w') as f:
         for key, value in data_dict.items():
@@ -21,6 +21,7 @@ def write_to_hdf5(hdf5_filename, data_dict):
 
             value = value.astype('int')  # Convert to float64 to accommodate NaN
             dataset = group.create_dataset('SNPs', data=value, chunks=True, compression='gzip', compression_opts=9)
+            group.create_dataset('Sample_Names', data=np.array(sample_names_dict[key], dtype='S'))
 
 def load_masked_positions(plink_path):
     """ Get the indices of positions that were masked (and subsequently imputed) """
@@ -55,12 +56,12 @@ if __name__ == '__main__':
     plink_dir = 'outputs'
 
     all_genotypes = {}
+    sample_names_dict = {}
 
     # Iterate over each file in the directory
     print("ADDING GENOTYPES TO H5...")
     for filename in os.listdir(plink_dir):
         if filename.endswith('.bed'):
-            print(filename)
             sample_name = os.path.splitext(filename)[0]
             prefix = os.path.join(plink_dir, sample_name)
 
@@ -73,7 +74,10 @@ if __name__ == '__main__':
             # Store genotypes
             all_genotypes[sample_name] = genotypes
 
-    write_to_hdf5('all_genotypes.h5', all_genotypes)
+            sample_names = fam['iid'].tolist()
+            sample_names_dict[sample_name] = sample_names
+
+    write_to_hdf5('all_genotypes.h5', all_genotypes, sample_names_dict)
 
     masked_positions_dict = {}
     masked_plink_dir = 'replicates'
