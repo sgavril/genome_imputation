@@ -3,7 +3,7 @@ import numpy as np
 
 from pandas_plink import read_plink
 
-(bim, fam, bed) = read_plink('/home/stefan.gavriliuc/projects/imputation/02_AlphaImpute2/Sable_October_2018_filt')
+(bim, fam, bed) = read_plink('data/filtered/Sable_October_2018_filt')
 reference_genotypes = bed.compute()
 
 def calculate_accuracy(ref_geno, imp_geno):
@@ -40,7 +40,7 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                     # Loop through each replicate
                     for replicate in num_ind_group.keys():
                         replicate_group = num_ind_group[replicate]
-                        print(f"{num_ind_group}")
+                        print(f"{replicate_group}")
                         # Get the sample names for this replicate
                         sample_names = replicate_group['Sample_Names'][:]
                         sample_names_str = [name.decode('utf-8') for name in sample_names]
@@ -54,17 +54,41 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                         masked_reference_genotypes = reference_genotypes[masked_positions, individual_index]
                         masked_imputed_genotypes = imputed_genotypes[masked_positions]
 
-                        print(masked_reference_genotypes)
-                        print(masked_imputed_genotypes)
-                        
                         # Compute percent match
                         percent_match = np.mean(masked_reference_genotypes == masked_imputed_genotypes) * 100
-                        
+
+                        if np.isnan(masked_reference_genotypes).any() or np.isnan(masked_imputed_genotypes).any():
+                            print("Arrays contain NaN values.")
+                        if np.isinf(masked_reference_genotypes).any() or np.isinf(masked_imputed_genotypes).any():
+                            print("Arrays contain Inf values.")
+
+                        # Find indices where NaNs are present in each array
+                        nan_indices_reference = np.where(np.isnan(masked_reference_genotypes))[0]
+                        nan_indices_imputed = np.where(np.isnan(masked_imputed_genotypes))[0]
+                        # print("Indices of NaN values in Reference Genotypes:", nan_indices_reference)
+                        # print("Indices of NaN values in Imputed Genotypes:", nan_indices_imputed)
+
+                        # Combine and find unique indices where either array has a NaN
+                        unique_nan_indices = np.unique(np.concatenate((nan_indices_reference, nan_indices_imputed)))
+
+                        # Remove these indices from both arrays
+                        # Remove these indices from both arrays
+                        filtered_reference_genotypes = np.delete(masked_reference_genotypes, unique_nan_indices)
+                        filtered_imputed_genotypes = np.delete(masked_imputed_genotypes, unique_nan_indices)
+                        print(f"Number of filtered imputed genotypes: {len(filtered_imputed_genotypes)}")
+
                         # Compute genotype correlation
-                        correlation = np.corrcoef(masked_reference_genotypes, masked_imputed_genotypes)[0, 1]
-                        
+                        if len(filtered_reference_genotypes) > 1 and np.var(filtered_reference_genotypes) != 0 and np.var(filtered_reference_genotypes) != 0:
+                            correlation = np.corrcoef(filtered_reference_genotypes, filtered_imputed_genotypes)[0, 1]
+                        else:
+                            correlation = 'NA'
+                            print(f"Skipped correlation calculation for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate} due to insufficient data.")
+                            print(f"  Length: {len(filtered_reference_genotypes)}")
+                            print(f"  Variance of reference: {np.var(filtered_reference_genotypes)}")
+                            print(f"  Variance of imputed: {np.var(filtered_reference_genotypes)}")
+
                         # Compute custom accuracy method
-                        custom_accuracy = calculate_accuracy(masked_reference_genotypes, masked_imputed_genotypes)
+                        custom_accuracy = calculate_accuracy(filtered_reference_genotypes, filtered_imputed_genotypes)
 
                         print(f"Accuracy Metrics for {sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}:")
                         print(f"  Percent Match: {percent_match}%")

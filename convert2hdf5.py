@@ -28,7 +28,8 @@ def load_masked_positions(plink_path):
     (bim, fam, bed) = read_plink(plink_path)
     masked_genotypes = bed.compute()
     masked_positions = np.where(np.isnan(masked_genotypes))[0]
-    return masked_positions
+    unique_masked_positions = np.unique(masked_positions)
+    return unique_masked_positions
 
 def add_masked_positions_to_hdf5(hdf5_filename, masked_positions_dict):
     """ Append an array containing the positions that were masked. """
