@@ -8,8 +8,12 @@ Code for genome imputation comparison study
 
 ### Overview
 1. Run `squeue runImputationPipeline.sh` which creates the files of SNPs to mask down to in `data/snpsToMaskDownTo/`. 
-2. Run `squeue maskGenotypesIndividuals.sh` to generate the masked replicate files.
-3. Run the imputation jobs: `squeue alphaImpute2_parallel.sh` and `convertMaskedToVcfForBeagle.sh`.
+2. Run `squeue maskGenotypesIndividuals.sh` to generate the masked replicate files to `replicates/`.
+3. Run the imputation jobs: `squeue runImputation_alphaImpute2.sh` and `runImputation_beagle.sh`.
+4. Then run jobs to create hdf5 file (currently parameters must be changed in `convert2hdf5.py`) using `squeue convert2hdf5.sh`.
+5. Then lastly `squeue computeAccuracy.sh` for both AI2 and Beagle, changing parameters in `computeAccuracies.py`. 
 
 ### TODO
-- Figure out how to combine all imputed genotypes into some python object (HDF5?)
+- ~~Figure out how to combine all imputed genotypes into some python object (HDF5?)~~
+- compute SNP-wise accuracy (using some script to subset hdf5)
+- determine how to estimate best reference individuals 
