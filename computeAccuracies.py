@@ -1,7 +1,13 @@
 import h5py
 import numpy as np
+import pandas as pd
 
 from pandas_plink import read_plink
+
+# genotype_hdf5_file='all_genotypes_full.h5'
+# accuracy_output_file='accuracy_metrics_test.csv'
+genotype_hdf5_file='beagle_test.h5'
+accuracy_output_file='accuracy_metrics_test_beagle.csv'
 
 (bim, fam, bed) = read_plink('data/filtered/Sable_October_2018_filt')
 reference_genotypes = bed.compute()
@@ -19,8 +25,12 @@ def calculate_accuracy(ref_geno, imp_geno):
     accuracy = (full_matches + partial_matches) / len(ref_geno)
     return accuracy
 
+df = pd.DataFrame(columns=['Sample', 'num_snps', 'snp_method', 'num_ind', 
+                            'num_imputed_snps', 'Percent_Match', 'Genotype_Correlation',
+                           'Custom_Accuracy'])    
+
 # Open the HDF5 file in read mode
-with h5py.File('all_genotypes.h5', 'r') as f:
+with h5py.File(genotype_hdf5_file, 'r') as f:
     # Loop through each sample_name
     for sample_name in f.keys():
         sample_group = f[sample_name]
@@ -94,3 +104,27 @@ with h5py.File('all_genotypes.h5', 'r') as f:
                         print(f"  Percent Match: {percent_match}%")
                         print(f"  Genotype Correlation: {correlation}")
                         print(f"  Accuracy: {custom_accuracy * 100}%")
+                        
+                        iter_df = pd.DataFrame({
+                            'Sample': [sample_name],
+                            'num_snps': [num_snps],
+                            'snp_method': [snp_sel_method],
+                            'num_ind': [num_ind],
+                            'num_imputed_snps': [len(filtered_imputed_genotypes)],
+                            'replicate': [replicate],
+                            'Percent_Match': [percent_match],
+                            'Genotype_Correlation': [correlation],
+                            'Custom_Accuracy': [custom_accuracy]
+                        })
+
+                        # Append the results to the main DataFrame
+                        df = pd.concat([df, iter_df], ignore_index=True)
+
+df = df.round({
+    '%match': 2,
+    'correlation': 2,
+    'custom_accuracy': 2
+})
+
+
+df.to_csv(accuracy_output_file, index=False)
