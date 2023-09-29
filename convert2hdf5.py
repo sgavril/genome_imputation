@@ -1,6 +1,21 @@
 import os, h5py, numpy as np
 from pandas_plink import read_plink
 
+# genotype_output_hdf5_file='all_genotypes.h5'
+# masked_plink_directory='replicates2'
+# plink_dir = 'outputs2'
+
+# genotype_output_hdf5_file='all_genotypes_test.h5'
+# masked_plink_directory='replicates3'
+# plink_dir = 'outputs3'
+
+# genotype_output_hdf5_file='all_genotypes_full.h5'
+# masked_plink_directory='replicates'
+# plink_dir = 'outputs'
+
+genotype_output_hdf5_file='beagle_test.h5'
+masked_plink_directory='replicates3'
+plink_dir = 'outputs_beagle3'
 
 def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
     """Write genotype data to HDF5 file."""
@@ -54,7 +69,6 @@ def validate_bed():
 
 if __name__ == '__main__':
     # Specify the directory containing PLINK Files
-    plink_dir = 'outputs'
 
     all_genotypes = {}
     sample_names_dict = {}
@@ -78,10 +92,10 @@ if __name__ == '__main__':
             sample_names = fam['iid'].tolist()
             sample_names_dict[sample_name] = sample_names
 
-    write_to_hdf5('all_genotypes.h5', all_genotypes, sample_names_dict)
+    write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
 
     masked_positions_dict = {}
-    masked_plink_dir = 'replicates'
+    masked_plink_dir = masked_plink_directory
     print("UPDATING IMPUTED POSITIONS...")
     for filename in os.listdir(masked_plink_dir):
         if filename.endswith('.bed'):
@@ -91,5 +105,5 @@ if __name__ == '__main__':
             masked_positions = load_masked_positions(prefix)
             masked_positions_dict[sample_name] = masked_positions
 
-    add_masked_positions_to_hdf5('all_genotypes.h5', masked_positions_dict)
+    add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
 

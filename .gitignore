@@ -22,3 +22,8 @@ loo/
 *.frq
 *.ldmap
 *.h5
+replicates*
+outputs*
+loo*
+logs*
+*.csv
