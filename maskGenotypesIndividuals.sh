@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4g
 #SBATCH --time=16:00:00
-#SBATCH --output=%x-%j.log
-#SBATCH --error=%x-%j.err
+#SBATCH --output=logs/%x-%j.log
+#SBATCH --error=logs/%x-%j.err
 
 # rm -rf replicates/
 # mkdir -p replicates/
@@ -21,8 +21,8 @@
 #     do
 #         for k in {1..5}
 #         do
-#             grep $sample samples.txt > "replicates/${base}_ind${j}_rep${k}.tmp"
-#             grep -v $sample samples.txt > replicates/tmp.ref.txt
+#             grep $sample data/samples.txt > "replicates/${base}_ind${j}_rep${k}.tmp"
+#             grep -v $sample data/samples.txt > replicates/tmp.ref.txt
 #             shuf -n $j replicates/tmp.ref.txt >> "replicates/${base}_ind${j}_rep${k}.tmp"
 #             awk '{print "Sable", $1}' "replicates/${base}_ind${j}_rep${k}.tmp" > "replicates/${base}_ind${j}_rep${k}.txt"
 #             #rm "replicates/${base}_ind${j}_rep${k}.tmp"
@@ -47,8 +47,8 @@ do
     do
         for k in {1..5}
         do
-            grep $sample samples.txt > "replicates/${base}_ind${j}_rep${k}.tmp"
-            grep -v $sample samples.txt > replicates/tmp.ref.txt
+            grep $sample data/samples.txt > "replicates/${base}_ind${j}_rep${k}.tmp"
+            grep -v $sample data/samples.txt > replicates/tmp.ref.txt
             shuf -n $j replicates/tmp.ref.txt >> "replicates/${base}_ind${j}_rep${k}.tmp"
             awk '{print "Sable", $1}' "replicates/${base}_ind${j}_rep${k}.tmp" > "replicates/${base}_ind${j}_rep${k}.txt"
             #rm "replicates/${base}_ind${j}_rep${k}.tmp"
@@ -61,7 +61,7 @@ do
 done
 
 # Convert to vcf for beagle input
-find replicates2/ -type f | grep ".bim$" |
+find replicates/ -type f -name "*.bim" | 
     parallel './plink --bfile {.} --recode vcf --out {.} --horse'
 
 find replicates/ -type f -name "*.log" -delete

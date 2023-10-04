@@ -3,7 +3,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=32g
 #SBATCH --time=24:00:00
-#SBATCH --output=accuracy_%j.log
+#SBATCH --output=logs/%x_accuracy_ai2_%j.log
+#SBATCH --error=logs/%x_accuracy_ai2_%j.err
 
 source activate imputation.py36
 
