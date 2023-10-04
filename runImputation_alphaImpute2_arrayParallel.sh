@@ -15,6 +15,7 @@ mkdir -p /scratch/23176676/outputs/
 mkdir -p /scratch/23176676/time_logs/
 
 # Calculate the number of files to process in this array job
+#find replicates/ -type f -name "*.bim" > data/file_list.txt
 TOTAL_FILES=$(wc -l < data/file_list.txt)
 FILES_PER_JOB=$((TOTAL_FILES / 100))
 START=$(( (SLURM_ARRAY_TASK_ID - 1) * FILES_PER_JOB + 1 ))

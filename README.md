@@ -5,6 +5,7 @@ Code for genome imputation comparison study
 ### Notes for myself
 - venv3.6 contains uses python3.6 as being compatible with alphaplinkpython 0.0.8
     - as well as AlphaImpute2 after modifying jitclass imports
+- AI2 results currently stored at `/scratch/23176564/`
 
 ### Overview
 1. Run `squeue runImputationPipeline.sh` which creates the files of SNPs to mask down to in `data/snpsToMaskDownTo/`. 
@@ -17,3 +18,10 @@ Code for genome imputation comparison study
 - ~~Figure out how to combine all imputed genotypes into some python object (HDF5?)~~
 - compute SNP-wise accuracy (using some script to subset hdf5)
 - determine how to estimate best reference individuals 
+- problem: figure out HD vs LD in AlphaImpute2, and check for Beagle
+```
+        Population Imputation Only        
+------------------------------------------
+Number of HD individuals: 23
+Number of LD individuals: 3
+```
