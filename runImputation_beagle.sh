@@ -1,65 +1,47 @@
 #!/bin/bash
-#SBATCH --job-name=beagle
-#SBATCH --output=beagle_%x-%j.out
-#SBATCH --error=beagle_%x-%j.err
+#SBATCH --job-name=beagle_array
+#SBATCH --output=logs/beagle_array_%A_%a.out
+#SBATCH --error=logs/beagle_array_%A_%a.err
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --mem-per-cpu=4000m
-#SBATCH --cpus-per-task=48
+#SBATCH --ntasks=50
+#SBATCH --mem-per-cpu=600m  
+#SBATCH --cpus-per-task=1
 #SBATCH --time=72:00:00
+#SBATCH --array=1-100
 
-source venv3.6/bin/activate
-# mkdir -p /scratch/20708102/outputs_beagle
-# mkdir -p outputs_beagle
+# Create the output and timing directories if they don't exist
+rm /scratch/23176676/outputs_beagle/* ; rm /scratch/23176676/time_logs_beagle/*
+mkdir -p /scratch/23176676/outputs_beagle/
+mkdir -p /scratch/23176676/time_logs_beagle/
 
-# Just testing one
-# ./plink --bfile /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1 \
-#     --recode vcf \
-#     --out /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1 \
-#     --horse && \
-#     gzip /scratch/20708102/replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
+# Get a list of all .vcf.gz files
+#find replicates/ -type f -name "*.vcf" > data/file_list_vcfs.txt
+TOTAL_FILES=$(wc -l < data/file_list_vcfs.txt)
+FILES_PER_JOB=$((TOTAL_FILES / 100))
+START=$(( (SLURM_ARRAY_TASK_ID - 1) * FILES_PER_JOB + 1 ))
+END=$(( START + FILES_PER_JOB - 1 ))
 
-# have to do this because the job finished early
-# find /scratch/20708102/replicates2/ -type f | grep ".bim$" |
-#     while read -r file; do
-#         vcf_file="${file%.bim}.vcf.gz"
-#         if [[ ! -f "$vcf_file" ]]; then
-#             echo "$file"
-#         fi
-#     done | parallel \
-#         './plink --bfile {.} --recode vcf --out {.} --horse && \
-#         gzip {.}".vcf" '
+# Calculate start and end indices for this array job
+TOTAL_FILES=${#FILES[@]}
+FILES_PER_JOB=$((TOTAL_FILES / 100))
+START=$(( (SLURM_ARRAY_TASK_ID - 1) * FILES_PER_JOB ))
+END=$(( START + FILES_PER_JOB - 1 ))
 
-# Just testing one iteration
-# java -jar beagle.22Jul22.46e.jar ne=50 \
-#     gt=replicates/SI_hair_128_10000_bpEQ_ind100_rep1.vcf.gz \
-#     out=outputs_beagle/SI_hair_128_10000_bpEQ_ind100_rep1.vcf
+# Extract the files for this array job
+sed -n "$START,$END p" data/file_list_vcfs.txt > data/current_files_vcfs_$SLURM_ARRAY_TASK_ID.txt
 
-# Take the replicate files and covert to vcf for plink
-# Note that recode munges family id + sample id, so use sed to remove fid
-rm replicates3/*.vcf.gz 
-find replicates3/ -type f | grep ".bim$" |
-    parallel \ 
-        './plink --bfile {.} --recode vcf --out {.} --horse && \
-        sed -i "s/Sable_//g" {.}.vcf && gzip {.}.vcf '
+echo "Starting GNU parallel to run Beagle..."
 
-# Run beagle using parallel
-find replicates3/ -type f | grep ".vcf.gz$" |
-    parallel -j 4 \
-        'base=$(basename {}); \
-        base_no_ext="${base%.gz}"; \
-        base_no_ext="${base_no_ext%.vcf}"; \
-        echo "Debug: base=$base, base_no_ext=$base_no_ext"; \
-        echo "java -jar beagle.22Jul22.46e.jar gt={} ne=50 out=outputs_beagle3/$base_no_ext" ; \
-        if [ ! -f outputs_beagle3/$base ]; then \
-            echo "Output file not found ; running beagle"; \
-            java -jar beagle.22Jul22.46e.jar gt={} ne=50 out=outputs_beagle3/$base_no_ext; \
-        else \
-            echo "File outputs_beagle3/$base already exists, skipping."; \
-        fi'
+# Process the subset of files for this array job
+parallel -j 50 --dry-run --joblog /scratch/23176676/time_logs_beagle/joblog_$SLURM_ARRAY_TASK_ID.log \
+    'FILE={}; \
+    BASENAME=$(basename $FILE .vcf); \
+    echo "DEBUG: Processing $FILE with basename ${BASENAME}"; \
+    OUTPUT_FILE="/scratch/23176676/outputs_beagle/${BASENAME}";  \
+    TIME_LOG="/scratch/23176676/time_logs_beagle/${BASENAME}.time.log"; \
+    (time java -jar beagle.22Jul22.46e.jar \
+        gt=${FILE%.*} \
+        ne=50 \
+        out= $OUTPUTFILE) &> $TIME_LOG' :::: data/current_files_vcfs_$SLURM_ARRAY_TASK_ID.txt
 
-# Re-convert back to plink genotype files for accuracy calcs
-find outputs_beagle3/ -type f -name "*.vcf.gz" | while read -r vcf_file; do
-    output_prefix=$(basename "${vcf_file}" .vcf.gz)
-    ./plink --vcf "${vcf_file}" --make-bed --const-fid --horse --out "outputs_beagle3/${output_prefix}"
-done
+rm data/current_files_vcf_$SLURM_ARRAY_TASK_ID.txt
