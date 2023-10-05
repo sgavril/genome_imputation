@@ -1,5 +1,7 @@
 import os, h5py, numpy as np
+from multiprocessing import Pool
 from pandas_plink import read_plink
+
 
 # genotype_output_hdf5_file='all_genotypes.h5'
 # masked_plink_directory='replicates2'
@@ -8,10 +10,6 @@ from pandas_plink import read_plink
 # genotype_output_hdf5_file='all_genotypes_test.h5'
 # masked_plink_directory='replicates3'
 # plink_dir = 'outputs3'
-
-# genotype_output_hdf5_file='all_genotypes_full.h5'
-# masked_plink_directory='replicates'
-# plink_dir = 'outputs'
 
 genotype_output_hdf5_file='alphaimpute2.h5'
 masked_plink_directory='replicates'
@@ -29,14 +27,14 @@ def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
             replicate = fields[6]
 
             group_name = f"{sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}"
-            if group_name not in f:
-                group = f.create_group(group_name)
-            else:
-                group = f[group_name]
+            
+            group = f.require_group(group_name)
 
-            value = value.astype('int')  # Convert to float64 to accommodate NaN
-            dataset = group.create_dataset('SNPs', data=value, chunks=True, compression='gzip', compression_opts=9)
+            dataset = group.create_dataset('SNPs', data=value, chunks=True, compression='gzip', compression_opts=4)
             group.create_dataset('Sample_Names', data=np.array(sample_names_dict[key], dtype='S'))
+
+    print('Writing results to HDF5 file completed.')
+    print(f'Number of entries: {len(data_dict)}')
 
 def load_masked_positions(plink_path):
     """ Get the indices of positions that were masked (and subsequently imputed) """
@@ -104,25 +102,51 @@ if __name__ == '__main__':
     print("ADDING GENOTYPES TO H5...")
     all_files = [f for f in os.listdir(plink_dir) if f.endswith('.bed')]
     chunk_size = 1000
-    file_chunks = [all_files[i:i+chunk_size] for i in range(0, len(all_files), chunk_size)]
-    
-    # Process each chunk
-    for idx, file_chunk in enumerate(file_chunks):
-        print(f"Processing chunk {idx + 1} of {len(file_chunks)}")
-        all_genotypes, sample_names_dict = process_chunk(file_chunk, plink_dir)
+    num_processes = 4
+    genotype_file_chunks = [all_files[i:i+chunk_size] for i in range(0, len(all_files), chunk_size)]
+    def process(genotype_file_chunks): return process_chunk(genotype_file_chunks, plink_dir)
+    with Pool(num_processes) as pool:
+        results = pool.map(process, genotype_file_chunks)
 
-        write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
+    # Aggregate results from chunks
+    all_genotypes = {}
+    sample_names_dict = {}
+    for res in results: 
+        all_genotypes.update(res[0])
+        sample_names_dict.update(res[1])
+    write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
 
-        del all_genotypes
-        del sample_names_dict
-    
+    # Process masked positions in parallel
     print("UPDATING IMPUTED POSITIONS...")
     masked_plink_dir = masked_plink_directory
     all_masked_files = [f for f in os.listdir(masked_plink_dir)]
-    chunk_size=1000
     masked_file_chunks = [all_masked_files[i:i+chunk_size] for i in range(0, len(all_masked_files), chunk_size)]
-    for idx, filename in enumerate(masked_file_chunks):
-        print(f"Processing masked positions chunk {idx + 1} of {len(masked_file_chunks)}")
-        masked_positions_dict = process_chunk_masked_positions(file_chunk, masked_plink_dir)
-        add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
-        del masked_positions_dict
+    def process_masked(masked_file_chunks): return process_chunk_masked_positions(masked_file_chunks, plink_dir)
+    with Pool(num_processes) as pool:
+        masked_positions_results = pool.map(process_masked, masked_file_chunks)
+
+    # Aggregate results from all processes
+    masked_positions_dict = {}
+    for res in masked_positions_results:
+        masked_positions_dict.update(res)
+
+    # Update HDF5 with masked positions
+    add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
+
+    # # Process each chunk
+    # for idx, file_chunk in enumerate(file_chunks):
+    #     print(f"Processing chunk {idx + 1} of {len(file_chunks)}")
+    #     all_genotypes, sample_names_dict = process_chunk(file_chunk, plink_dir)
+
+    #     write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
+
+    #     del all_genotypes
+    #     del sample_names_dict
+    
+
+    # chunk_size=1000
+    # for idx, filename in enumerate(masked_file_chunks):
+    #     print(f"Processing masked positions chunk {idx + 1} of {len(masked_file_chunks)}")
+    #     masked_positions_dict = process_chunk_masked_positions(file_chunk, masked_plink_dir)
+    #     add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
+    #     del masked_positions_dict
