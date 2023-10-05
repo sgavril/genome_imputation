@@ -13,9 +13,9 @@ from pandas_plink import read_plink
 # masked_plink_directory='replicates'
 # plink_dir = 'outputs'
 
-genotype_output_hdf5_file='beagle_test.h5'
-masked_plink_directory='replicates3'
-plink_dir = 'outputs_beagle3'
+genotype_output_hdf5_file='alphaimpute2.h5'
+masked_plink_directory='replicates'
+plink_dir = '/scratch/23176676/outputs'
 
 def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
     """Write genotype data to HDF5 file."""
@@ -67,15 +67,11 @@ def add_masked_positions_to_hdf5(hdf5_filename, masked_positions_dict):
 def validate_bed():
     pass
 
-if __name__ == '__main__':
-    # Specify the directory containing PLINK Files
-
+def process_chunk(file_chunk, plink_dir):
     all_genotypes = {}
     sample_names_dict = {}
-
-    # Iterate over each file in the directory
-    print("ADDING GENOTYPES TO H5...")
-    for filename in os.listdir(plink_dir):
+    
+    for filename in file_chunk:
         if filename.endswith('.bed'):
             sample_name = os.path.splitext(filename)[0]
             prefix = os.path.join(plink_dir, sample_name)
@@ -92,18 +88,41 @@ if __name__ == '__main__':
             sample_names = fam['iid'].tolist()
             sample_names_dict[sample_name] = sample_names
 
-    write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
+    return all_genotypes, sample_names_dict
 
+def process_chunk_masked_positions(file_chunk, masked_plink_dir):
     masked_positions_dict = {}
-    masked_plink_dir = masked_plink_directory
-    print("UPDATING IMPUTED POSITIONS...")
-    for filename in os.listdir(masked_plink_dir):
+    for filename in file_chunk:
         if filename.endswith('.bed'):
-            print(filename)
             sample_name = os.path.splitext(filename)[0]
             prefix = os.path.join(masked_plink_dir, sample_name)
             masked_positions = load_masked_positions(prefix)
             masked_positions_dict[sample_name] = masked_positions
+    return masked_positions_dict
 
-    add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
+if __name__ == '__main__':
+    print("ADDING GENOTYPES TO H5...")
+    all_files = [f for f in os.listdir(plink_dir) if f.endswith('.bed')]
+    chunk_size = 1000
+    file_chunks = [all_files[i:i+chunk_size] for i in range(0, len(all_files), chunk_size)]
+    
+    # Process each chunk
+    for idx, file_chunk in enumerate(file_chunks):
+        print(f"Processing chunk {idx + 1} of {len(file_chunks)}")
+        all_genotypes, sample_names_dict = process_chunk(file_chunk, plink_dir)
 
+        write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
+
+        del all_genotypes
+        del sample_names_dict
+    
+    print("UPDATING IMPUTED POSITIONS...")
+    masked_plink_dir = masked_plink_directory
+    all_masked_files = [f for f in os.listdir(masked_plink_dir)]
+    chunk_size=1000
+    masked_file_chunks = [all_masked_files[i:i+chunk_size] for i in range(0, len(all_masked_files), chunk_size)]
+    for idx, filename in enumerate(masked_file_chunks):
+        print(f"Processing masked positions chunk {idx + 1} of {len(masked_file_chunks)}")
+        masked_positions_dict = process_chunk_masked_positions(file_chunk, masked_plink_dir)
+        add_masked_positions_to_hdf5(genotype_output_hdf5_file, masked_positions_dict)
+        del masked_positions_dict
