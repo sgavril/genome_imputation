@@ -1,7 +1,6 @@
-import os, h5py, numpy as np
+import os, h5py, numpy as np, logging
 from multiprocessing import Pool
 from pandas_plink import read_plink
-
 
 # genotype_output_hdf5_file='all_genotypes.h5'
 # masked_plink_directory='replicates2'
@@ -14,6 +13,11 @@ from pandas_plink import read_plink
 genotype_output_hdf5_file='alphaimpute2.h5'
 masked_plink_directory='replicates'
 plink_dir = '/scratch/23176676/outputs'
+
+logging.basicConfig(filename='logs/convert2hdf5.log', 
+                    level=logging.INFO,
+                    filemode='w',
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
     """Write genotype data to HDF5 file."""
@@ -33,12 +37,12 @@ def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
             dataset = group.create_dataset('SNPs', data=value, chunks=True, compression='gzip', compression_opts=4)
             group.create_dataset('Sample_Names', data=np.array(sample_names_dict[key], dtype='S'))
 
-    print('Writing results to HDF5 file completed.')
-    print(f'Number of entries: {len(data_dict)}')
+    logging.info('Writing results to HDF5 file completed.')
+    logging.info(f'Number of entries: {len(data_dict)}')
 
 def load_masked_positions(plink_path):
     """ Get the indices of positions that were masked (and subsequently imputed) """
-    (bim, fam, bed) = read_plink(plink_path)
+    (bim, fam, bed) = read_plink(plink_path, verbose=False)
     masked_genotypes = bed.compute()
     masked_positions = np.where(np.isnan(masked_genotypes))[0]
     unique_masked_positions = np.unique(masked_positions)
@@ -68,6 +72,10 @@ def validate_bed():
 def process_chunk(file_chunk, plink_dir):
     all_genotypes = {}
     sample_names_dict = {}
+
+    chunk_index = genotype_file_chunks.index(file_chunk)
+    
+    logging.info(f"Processing masked positions for chunk {chunk_index + 1}/{len(genotype_file_chunks)}...")
     
     for filename in file_chunk:
         if filename.endswith('.bed'):
@@ -75,7 +83,7 @@ def process_chunk(file_chunk, plink_dir):
             prefix = os.path.join(plink_dir, sample_name)
 
             # Read in the file using pandas_plink
-            (bim, fam, bed) = read_plink(prefix)
+            (bim, fam, bed) = read_plink(prefix, verbose=False)
 
             # Convert genotype data to a numpy array
             genotypes = bed.compute()
@@ -99,7 +107,7 @@ def process_chunk_masked_positions(file_chunk, masked_plink_dir):
     return masked_positions_dict
 
 if __name__ == '__main__':
-    print("ADDING GENOTYPES TO H5...")
+    logging.info("ADDING GENOTYPES TO H5...")
     all_files = [f for f in os.listdir(plink_dir) if f.endswith('.bed')]
     chunk_size = 1000
     num_processes = 4
@@ -117,7 +125,7 @@ if __name__ == '__main__':
     write_to_hdf5(genotype_output_hdf5_file, all_genotypes, sample_names_dict)
 
     # Process masked positions in parallel
-    print("UPDATING IMPUTED POSITIONS...")
+    logging.info("UPDATING IMPUTED POSITIONS...")
     masked_plink_dir = masked_plink_directory
     all_masked_files = [f for f in os.listdir(masked_plink_dir)]
     masked_file_chunks = [all_masked_files[i:i+chunk_size] for i in range(0, len(all_masked_files), chunk_size)]
