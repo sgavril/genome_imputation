@@ -10,4 +10,4 @@
 
 source venv3.6/bin/activate
 
-python convert2hdf5.py --chunk_file "data/hdf5_chunks/hdf5_chunk_${SLURM_ARRAY_TASK_ID}.txt"
+python convert2hdf5.py --chunk_file "data/hdf5_chunks/hdf5_chunk_$(printf "%03d" ${SLURM_ARRAY_TASK_ID}).txt"

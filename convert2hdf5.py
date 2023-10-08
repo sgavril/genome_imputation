@@ -19,7 +19,7 @@ plink_dir = 'outputs'
 
 def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
     """Write genotype data to HDF5 file."""
-    with h5py.File(hdf5_filename, 'w') as f:
+    with h5py.File(hdf5_filename, 'a') as f:
         for key, value in data_dict.items():
             fields = key.split('_')
             sample_name = '_'.join(fields[:3])
@@ -29,6 +29,7 @@ def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
             replicate = fields[6]
 
             group_name = f"{sample_name}/{num_snps}/{snp_sel_method}/{num_ind}/{replicate}"
+            print(f"Creating group: {group_name}")
             if group_name not in f:
                 group = f.create_group(group_name)
             else:
@@ -81,12 +82,15 @@ if __name__ == '__main__':
     with open(args.chunk_file, 'r') as f:
         filenames = [line.strip() for line in f]
         print(f"Number of files: {len(filenames)}")
+        # Convert this to 3 digits to match file split naming ie 001, 002
         chunk_identifier = os.path.splitext(os.path.basename(args.chunk_file))[0]  # e.g., "chunk_1" from "chunk_1.txt"
+        # base_name = os.path.splitext(os.path.basename(args.chunk_file))[[0]]
+        # chunk_identifier = f"{base_name:0>3}"
         genotype_output_hdf5_file = f'data/hdf5_chunks/output_{chunk_identifier}.h5'
         for filename in filenames:
             count+=1
             if filename.endswith('.bim'):
-                sample_name = os.path.splitext(filename)[0]
+                sample_name = os.path.splitext(os.path.basename(filename))[0]
                 prefix = os.path.join(plink_dir, sample_name)
 
                 # Read in the file using pandas_plink
