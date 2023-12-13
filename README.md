@@ -15,8 +15,13 @@ Code for genome imputation comparison study
 5. Then lastly `squeue computeAccuracy.sh` for both AI2 and Beagle, changing parameters in `computeAccuracies.py`. 
 
 ### TODO
-- ~~Figure out how to combine all imputed genotypes into some python object (HDF5?)~~
-- compute SNP-wise accuracy (using some script to subset hdf5)
+- [ ] Generate Beagle output
+- [ ] Write script to combine hdf5 output chunks
+    - Currently I have output split into chunks of 800 samples
+    - [ ] Generate chunks for Beagle
+- [ ] compute SNP-wise accuracy (using some script to subset hdf5)
+    - [ ] Check that script works on a chunk
+- [ ] Combine accuracy metrics
 - determine how to estimate best reference individuals 
 - problem: figure out HD vs LD in AlphaImpute2, and check for Beagle
 ```
