@@ -10,14 +10,14 @@
 #SBATCH --array=1-100
 
 # Create the output and timing directories if they don't exist
-# rm /scratch/23176676/outputs_beagle/* ; rm /scratch/23176676/time_logs_beagle/*
-mkdir -p /scratch/23176676/outputs_beagle/
-mkdir -p /scratch/23176676/time_logs_beagle/
+# rm ${DIR_SCRATCH}outputs_beagle/* ; rm ${DIR_SCRATCH}time_logs_beagle/*
+mkdir -p ${DIR_SCRATCH}outputs_beagle/
+mkdir -p ${DIR_SCRATCH}time_logs_beagle/
 
 # Get a list of all .vcf.gz files
 #find replicates/ -type f -name "*.vcf" > data/file_list_vcfs.txt
 TOTAL_FILES=$(wc -l < data/file_list_vcfs.txt)
-FILES_PER_JOB=$((TOTAL_FILES / 100))
+FILES_PER_JOB=$(( (TOTAL_FILES + 99) / 100))
 START=$(( (SLURM_ARRAY_TASK_ID - 1) * FILES_PER_JOB + 1 ))
 END=$(( START + FILES_PER_JOB - 1 ))
 
@@ -27,12 +27,12 @@ sed -n "$START,$END p" data/file_list_vcfs.txt > data/current_files_vcfs_$SLURM_
 echo "Starting GNU parallel to run Beagle..."
 
 # Process the subset of files for this array job
-parallel -j 4 --joblog /scratch/23176676/time_logs_beagle/joblog_$SLURM_ARRAY_TASK_ID.log \
+parallel -j 4 --joblog ${DIR_SCRATCH}time_logs_beagle/joblog_$SLURM_ARRAY_TASK_ID.log \
     'FILE={}; \
     BASENAME=$(basename $FILE .vcf); \
     echo "DEBUG: Processing $FILE with basename ${BASENAME}"; \
-    OUTPUT_FILE="/scratch/23176676/outputs_beagle/${BASENAME}";  \
-    TIME_LOG="/scratch/23176676/time_logs_beagle/${BASENAME}.time.log"; \
+    OUTPUT_FILE="${DIR_SCRATCH}outputs_beagle/${BASENAME}";  \
+    TIME_LOG="${DIR_SCRATCH}time_logs_beagle/${BASENAME}.time.log"; \
     (time java -jar beagle.22Jul22.46e.jar \
         gt=$FILE \
         ne=50 \

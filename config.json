@@ -1,0 +1,7 @@
+{
+    "INPUT_GENOTYPES_RAW": "data/raw/Sable_October_2018",
+    "OUTPUT_GENOTYPES_FILTERED": "data/filtered/Sable_October_2018_filt",
+    "FILE_CHROM_SIZES": "dat/chrom.sort.sizes.txt",
+    "DIR_LOO": "./loo/",
+    "DIR_SCRATCH": "/scratch/26416205/"
+}
