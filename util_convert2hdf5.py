@@ -1,4 +1,4 @@
-import os, h5py, numpy as np, argparse
+import os, h5py, numpy as np, argparse, json
 from pandas_plink import read_plink
 
 # genotype_output_hdf5_file='all_genotypes.h5'
@@ -10,15 +10,30 @@ from pandas_plink import read_plink
 # plink_dir = 'outputs3'
 
 # genotype_output_hdf5_file='all_genotypes_full.h5'
-masked_plink_directory='replicates'
-plink_dir = 'outputs'
+with open('config.json', 'r') as file:
+    config = json.load(file)
+
+DIR_SCRATCH = config['DIR_SCRATCH']
+masked_plink_directory = DIR_SCRATCH + 'replicates'
+plink_dir = DIR_SCRATCH + 'outputs'
 
 # genotype_output_hdf5_file='beagle_test.h5'
 # masked_plink_directory='replicates3'
 # plink_dir = 'outputs_beagle3'
 
-def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
-    """Write genotype data to HDF5 file."""
+def write_to_hdf5(hdf5_filename: str, data_dict: dict, sample_names_dict:dict):
+    """
+    Write genotype data to HDF5 file under a corresponding sample name.
+
+    Organize data hierarchically. Each key in data_dict is a unique combination of params
+        that is made as a group in the HDF5 file. Genotypes are stored as the data within
+        these groups alongside sample names of the samples included during the imputation 
+        process as reference individuals.
+
+    :param hdf5_filename; Path to HDF5 file where data will be added.
+    :param data_dict: Dict where keys are parameter combinations and values are genotypes.
+    :data sample_names_dict: Dict where keys match those in data_dict and values are lists of sample names.
+    """
     with h5py.File(hdf5_filename, 'a') as f:
         for key, value in data_dict.items():
             fields = key.split('_')
@@ -39,8 +54,13 @@ def write_to_hdf5(hdf5_filename, data_dict, sample_names_dict):
             dataset = group.create_dataset('SNPs', data=value, chunks=True, compression='gzip', compression_opts=9)
             group.create_dataset('Sample_Names', data=np.array(sample_names_dict[key], dtype='S'))
 
-def load_masked_positions(plink_path):
-    """ Get the indices of positions that were masked (and subsequently imputed) """
+def load_masked_positions(plink_path: str) -> np.ndarray: 
+    """ 
+    Get the indices of positions that were masked (and subsequently imputed) 
+    
+    :param plink_path: Path to the set of PLINK files (.bed, .bim, .fam)
+    :return: Array 
+    """
     (bim, fam, bed) = read_plink(plink_path)
     masked_genotypes = bed.compute()
     masked_positions = np.where(np.isnan(masked_genotypes))[0]
